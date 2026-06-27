@@ -1,0 +1,67 @@
+<svg viewBox="0 0 1000 640" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#444"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="640" fill="#ffffff"/>
+
+  <text x="500" y="36" text-anchor="middle" font-size="22" font-weight="bold" fill="#111">Lunasin AI — Architecture Diagram</text>
+  <text x="500" y="58" text-anchor="middle" font-size="13" fill="#666">H0 Hackathon — Vercel v0 + AWS Databases (B2B Track)</text>
+
+  <!-- User -->
+  <rect x="400" y="90" width="200" height="56" rx="10" fill="#111827"/>
+  <text x="500" y="123" text-anchor="middle" font-size="14" fill="#fff" font-weight="bold">User / Browser</text>
+
+  <line x1="500" y1="146" x2="500" y2="180" stroke="#444" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Vercel container -->
+  <rect x="230" y="180" width="540" height="160" rx="14" fill="#fafafa" stroke="#111827" stroke-width="2"/>
+  <text x="500" y="204" text-anchor="middle" font-size="13" font-weight="bold" fill="#111827">VERCEL DEPLOYMENT</text>
+
+  <rect x="260" y="222" width="220" height="90" rx="10" fill="#1f2937"/>
+  <text x="370" y="258" text-anchor="middle" font-size="13" fill="#fff" font-weight="bold">Next.js Frontend</text>
+  <text x="370" y="276" text-anchor="middle" font-size="11" fill="#cbd5e1">(UI — generated via v0.app)</text>
+  <text x="370" y="294" text-anchor="middle" font-size="11" fill="#cbd5e1">Dashboard / Invoices / Clients</text>
+
+  <line x1="480" y1="267" x2="690" y2="267" stroke="#444" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="585" y="259" text-anchor="middle" font-size="10" fill="#666">fetch()</text>
+
+  <rect x="490" y="222" width="220" height="90" rx="10" fill="#1f2937"/>
+  <text x="600" y="252" text-anchor="middle" font-size="13" fill="#fff" font-weight="bold">API Routes</text>
+  <text x="600" y="270" text-anchor="middle" font-size="11" fill="#cbd5e1">(Serverless Functions)</text>
+  <text x="600" y="288" text-anchor="middle" font-size="11" fill="#cbd5e1">/api/invoices, /api/clients,</text>
+  <text x="600" y="302" text-anchor="middle" font-size="11" fill="#cbd5e1">/api/cashflow, /api/ai/risk-insight</text>
+
+  <!-- Arrows down to DB and Gemini -->
+  <line x1="540" y1="340" x2="350" y2="400" stroke="#444" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="400" y="365" text-anchor="middle" font-size="11" fill="#666">AWS SDK v3</text>
+  <text x="400" y="378" text-anchor="middle" font-size="11" fill="#666">(CRUD operations)</text>
+
+  <line x1="660" y1="340" x2="780" y2="400" stroke="#444" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="755" y="365" text-anchor="middle" font-size="11" fill="#666">REST API call</text>
+  <text x="755" y="378" text-anchor="middle" font-size="11" fill="#666">(risk analysis prompt)</text>
+
+  <!-- DynamoDB box -->
+  <rect x="120" y="400" width="380" height="150" rx="12" fill="#fef3e8" stroke="#e8821a" stroke-width="2"/>
+  <text x="310" y="426" text-anchor="middle" font-size="14" font-weight="bold" fill="#b45309">AWS DynamoDB</text>
+  <text x="310" y="446" text-anchor="middle" font-size="12" fill="#92400e">Table: LunasinTable (single-table design)</text>
+
+  <text x="140" y="470" font-size="11" fill="#78350f">PK: TENANT#&lt;id&gt;   SK: INVOICE#&lt;id&gt;</text>
+  <text x="140" y="488" font-size="11" fill="#78350f">PK: TENANT#&lt;id&gt;   SK: CLIENT#&lt;id&gt;</text>
+  <text x="140" y="506" font-size="11" fill="#78350f">PK: CLIENT#&lt;id&gt;   SK: PAYMENT#&lt;id&gt;</text>
+  <text x="140" y="530" font-size="10" fill="#92400e">GSI1: query invoices by due date range</text>
+
+  <!-- Gemini box -->
+  <rect x="600" y="400" width="280" height="150" rx="12" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+  <text x="740" y="426" text-anchor="middle" font-size="14" font-weight="bold" fill="#3730a3">Gemini API</text>
+  <text x="740" y="446" text-anchor="middle" font-size="12" fill="#4338ca">AI Risk Insight Engine</text>
+  <text x="740" y="472" text-anchor="middle" font-size="11" fill="#4f46e5">Input: client payment history</text>
+  <text x="740" y="490" text-anchor="middle" font-size="11" fill="#4f46e5">Output: risky clients + reason</text>
+  <text x="740" y="512" text-anchor="middle" font-size="11" fill="#4f46e5">(structured JSON)</text>
+
+  <!-- Legend / footer -->
+  <text x="500" y="590" text-anchor="middle" font-size="11" fill="#888">Track: Monetizable B2B App   |   Database: AWS DynamoDB   |   Frontend/Host: Vercel</text>
+  <text x="500" y="608" text-anchor="middle" font-size="11" fill="#888">Data flow: User → Vercel (Next.js + API Routes) → DynamoDB / Gemini API</text>
+</svg>
