@@ -1,0 +1,212 @@
+[
+  {
+    "PK": { "S": "TENANT#default-tenant" },
+    "SK": { "S": "CLIENT#c1" },
+    "name": { "S": "CV Abadi Jaya" },
+    "contactInfo": { "S": "abadi.jaya@mail.com" }
+  },
+  {
+    "PK": { "S": "TENANT#default-tenant" },
+    "SK": { "S": "CLIENT#c2" },
+    "name": { "S": "PT Maju Bersama" },
+    "contactInfo": { "S": "contact@majubersama.co.id" }
+  },
+  {
+    "PK": { "S": "TENANT#default-tenant" },
+    "SK": { "S": "CLIENT#c3" },
+    "name": { "S": "Toko Berkah Mandiri" },
+    "contactInfo": { "S": "berkah.mandiri@gmail.com" }
+  },
+  {
+    "PK": { "S": "TENANT#default-tenant" },
+    "SK": { "S": "CLIENT#c4" },
+    "name": { "S": "PT Indo Supply" },
+    "contactInfo": { "S": "finance@indosupply.com" }
+  },
+  {
+    "PK": { "S": "TENANT#default-tenant" },
+    "SK": { "S": "CLIENT#c5" },
+    "name": { "S": "Sinar Surya Agency" },
+    "contactInfo": { "S": "sinarsurya.agency@mail.com" }
+  },
+  {
+    "PK": { "S": "TENANT#default-tenant" },
+    "SK": { "S": "INVOICE#inv1" },
+    "clientId": { "S": "c1" },
+    "amount": { "N": "15000000" },
+    "status": { "S": "PAID" },
+    "issueDate": { "S": "2026-06-01" },
+    "dueDate": { "S": "2026-06-15" },
+    "notes": { "S": "Layanan IT Support Juni" },
+    "GSI1PK": { "S": "TENANT#default-tenant" },
+    "GSI1SK": { "S": "DUEDATE#2026-06-15#INVOICE#inv1" }
+  },
+  {
+    "PK": { "S": "TENANT#default-tenant" },
+    "SK": { "S": "INVOICE#inv2" },
+    "clientId": { "S": "c1" },
+    "amount": { "N": "12500000" },
+    "status": { "S": "UNPAID" },
+    "issueDate": { "S": "2026-06-20" },
+    "dueDate": { "S": "2026-07-05" },
+    "notes": { "S": "Layanan IT Support Juli" },
+    "GSI1PK": { "S": "TENANT#default-tenant" },
+    "GSI1SK": { "S": "DUEDATE#2026-07-05#INVOICE#inv2" }
+  },
+  {
+    "PK": { "S": "TENANT#default-tenant" },
+    "SK": { "S": "INVOICE#inv3" },
+    "clientId": { "S": "c2" },
+    "amount": { "N": "25000000" },
+    "status": { "S": "PAID" },
+    "issueDate": { "S": "2026-05-01" },
+    "dueDate": { "S": "2026-05-15" },
+    "notes": { "S": "Supply Bahan Baku Kloter 1" },
+    "GSI1PK": { "S": "TENANT#default-tenant" },
+    "GSI1SK": { "S": "DUEDATE#2026-05-15#INVOICE#inv3" }
+  },
+  {
+    "PK": { "S": "TENANT#default-tenant" },
+    "SK": { "S": "INVOICE#inv4" },
+    "clientId": { "S": "c2" },
+    "amount": { "N": "25000000" },
+    "status": { "S": "PAID" },
+    "issueDate": { "S": "2026-05-20" },
+    "dueDate": { "S": "2026-06-05" },
+    "notes": { "S": "Supply Bahan Baku Kloter 2" },
+    "GSI1PK": { "S": "TENANT#default-tenant" },
+    "GSI1SK": { "S": "DUEDATE#2026-06-05#INVOICE#inv4" }
+  },
+  {
+    "PK": { "S": "TENANT#default-tenant" },
+    "SK": { "S": "INVOICE#inv5" },
+    "clientId": { "S": "c2" },
+    "amount": { "N": "35000000" },
+    "status": { "S": "OVERDUE" },
+    "issueDate": { "S": "2026-06-01" },
+    "dueDate": { "S": "2026-06-15" },
+    "notes": { "S": "Supply Bahan Baku Kloter 3" },
+    "GSI1PK": { "S": "TENANT#default-tenant" },
+    "GSI1SK": { "S": "DUEDATE#2026-06-15#INVOICE#inv5" }
+  },
+  {
+    "PK": { "S": "TENANT#default-tenant" },
+    "SK": { "S": "INVOICE#inv6" },
+    "clientId": { "S": "c3" },
+    "amount": { "N": "8000000" },
+    "status": { "S": "PAID" },
+    "issueDate": { "S": "2026-05-10" },
+    "dueDate": { "S": "2026-05-24" },
+    "notes": { "S": "Pembelian Inventaris" },
+    "GSI1PK": { "S": "TENANT#default-tenant" },
+    "GSI1SK": { "S": "DUEDATE#2026-05-24#INVOICE#inv6" }
+  },
+  {
+    "PK": { "S": "TENANT#default-tenant" },
+    "SK": { "S": "INVOICE#inv7" },
+    "clientId": { "S": "c3" },
+    "amount": { "N": "9500000" },
+    "status": { "S": "PAID" },
+    "issueDate": { "S": "2026-06-05" },
+    "dueDate": { "S": "2026-06-19" },
+    "notes": { "S": "Servis Mesin Produksi" },
+    "GSI1PK": { "S": "TENANT#default-tenant" },
+    "GSI1SK": { "S": "DUEDATE#2026-06-19#INVOICE#inv7" }
+  },
+  {
+    "PK": { "S": "TENANT#default-tenant" },
+    "SK": { "S": "INVOICE#inv8" },
+    "clientId": { "S": "c3" },
+    "amount": { "N": "12000000" },
+    "status": { "S": "UNPAID" },
+    "issueDate": { "S": "2026-06-25" },
+    "dueDate": { "S": "2026-07-09" },
+    "notes": { "S": "Sewa Peralatan Tambahan" },
+    "GSI1PK": { "S": "TENANT#default-tenant" },
+    "GSI1SK": { "S": "DUEDATE#2026-07-09#INVOICE#inv8" }
+  },
+  {
+    "PK": { "S": "TENANT#default-tenant" },
+    "SK": { "S": "INVOICE#inv9" },
+    "clientId": { "S": "c4" },
+    "amount": { "N": "18000000" },
+    "status": { "S": "PAID" },
+    "issueDate": { "S": "2026-06-10" },
+    "dueDate": { "S": "2026-06-24" },
+    "notes": { "S": "Pengiriman Spareparts A" },
+    "GSI1PK": { "S": "TENANT#default-tenant" },
+    "GSI1SK": { "S": "DUEDATE#2026-06-24#INVOICE#inv9" }
+  },
+  {
+    "PK": { "S": "TENANT#default-tenant" },
+    "SK": { "S": "INVOICE#inv10" },
+    "clientId": { "S": "c4" },
+    "amount": { "N": "22000000" },
+    "status": { "S": "UNPAID" },
+    "issueDate": { "S": "2026-06-20" },
+    "dueDate": { "S": "2026-07-02" },
+    "notes": { "S": "Pengiriman Spareparts B" },
+    "GSI1PK": { "S": "TENANT#default-tenant" },
+    "GSI1SK": { "S": "DUEDATE#2026-07-02#INVOICE#inv10" }
+  },
+  {
+    "PK": { "S": "TENANT#default-tenant" },
+    "SK": { "S": "INVOICE#inv11" },
+    "clientId": { "S": "c5" },
+    "amount": { "N": "5000000" },
+    "status": { "S": "UNPAID" },
+    "issueDate": { "S": "2026-06-22" },
+    "dueDate": { "S": "2026-07-07" },
+    "notes": { "S": "Desain Konten Sosmed Juni" },
+    "GSI1PK": { "S": "TENANT#default-tenant" },
+    "GSI1SK": { "S": "DUEDATE#2026-07-07#INVOICE#inv11" }
+  },
+  {
+    "PK": { "S": "CLIENT#c1" },
+    "SK": { "S": "PAYMENT#p1" },
+    "invoiceId": { "S": "inv1" },
+    "paidDate": { "S": "2026-06-14" },
+    "wasLate": { "BOOL": false },
+    "daysLate": { "N": "0" }
+  },
+  {
+    "PK": { "S": "CLIENT#c2" },
+    "SK": { "S": "PAYMENT#p2" },
+    "invoiceId": { "S": "inv3" },
+    "paidDate": { "S": "2026-05-25" },
+    "wasLate": { "BOOL": true },
+    "daysLate": { "N": "10" }
+  },
+  {
+    "PK": { "S": "CLIENT#c2" },
+    "SK": { "S": "PAYMENT#p3" },
+    "invoiceId": { "S": "inv4" },
+    "paidDate": { "S": "2026-06-22" },
+    "wasLate": { "BOOL": true },
+    "daysLate": { "N": "17" }
+  },
+  {
+    "PK": { "S": "CLIENT#c3" },
+    "SK": { "S": "PAYMENT#p4" },
+    "invoiceId": { "S": "inv6" },
+    "paidDate": { "S": "2026-05-24" },
+    "wasLate": { "BOOL": false },
+    "daysLate": { "N": "0" }
+  },
+  {
+    "PK": { "S": "CLIENT#c3" },
+    "SK": { "S": "PAYMENT#p5" },
+    "invoiceId": { "S": "inv7" },
+    "paidDate": { "S": "2026-06-25" },
+    "wasLate": { "BOOL": true },
+    "daysLate": { "N": "6" }
+  },
+  {
+    "PK": { "S": "CLIENT#c4" },
+    "SK": { "S": "PAYMENT#p6" },
+    "invoiceId": { "S": "inv9" },
+    "paidDate": { "S": "2026-06-23" },
+    "wasLate": { "BOOL": false },
+    "daysLate": { "N": "0" }
+  }
+]
