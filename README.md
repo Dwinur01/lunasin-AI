@@ -1,85 +1,85 @@
-# Lunasin AI — Smart Cashflow & Invoice Agent for MSMEs
+# Lunasin AI — Asisten Keuangan & Invoice Pintar untuk UMKM
 
-**Lunasin AI** is an AI-powered financial management and credit risk analysis platform designed for Indonesian Micro, Small, and Medium Enterprises (MSMEs/UMKM). It automates invoice tracking, provides 7-day cashflow projections, and leverages generative AI to deliver early warnings on potential client payment delays.
+**Lunasin AI** adalah platform pengelolaan keuangan dan analisis risiko kredit berbasis AI yang dirancang khusus untuk Usaha Mikro, Kecil, dan Menengah (UMKM) di Indonesia. Aplikasi ini mengotomatiskan pelacakan invoice, memproyeksikan arus kas (cashflow) 7 hari ke depan, dan memanfaatkan kecerdasan buatan (AI) untuk memberikan peringatan dini terhadap risiko keterlambatan pembayaran klien.
 
-Built for the **H0 — Hack the Zero Stack (Vercel v0 + AWS Databases)** hackathon.
-
----
-
-## 🚀 Core Features (MVP)
-
-1. **Intelligent Dashboard**: Displays critical financial metrics (Total Outstanding, Overdue Amount, and Projected Cash Inflow for the next 7 days).
-2. **AI Credit Risk Analyzer**: Uses **Gemini 1.5 Flash** to evaluate historical client payment behaviors and dynamically flags clients at high or medium risk of late payment with clear, data-driven explanations.
-3. **Invoice Management**: Complete CRUD operations for invoices. Create new invoices, filter by status (All, Unpaid, Overdue, Paid), and mark them as paid.
-4. **Client CRM & Payment Ledger**: Displays client profiles, cumulative transactions, on-time payment rates, and comprehensive payment history logs.
-5. **Seamless Local Fallback**: Automatically falls back to local JSON-based analytical credit scoring if AWS credentials are not configured, ensuring zero-config local testing.
+Proyek ini dibangun untuk kompetisi **H0 — Hack the Zero Stack (Vercel v0 + AWS Databases)**.
 
 ---
 
-## 🛠️ Tech Stack
+## 🚀 Fitur Utama (MVP)
+
+1. **Dashboard Arus Kas**: Menampilkan metrik keuangan penting secara real-time (Total Piutang Aktif, Nominal Jatuh Tempo, dan Proyeksi Kas Masuk dalam 7 hari ke depan).
+2. **Analisis Risiko Kredit (AI)**: Menggunakan **Gemini 1.5 Flash** untuk menganalisis riwayat pembayaran klien dan memberikan label tingkat risiko secara dinamis disertai alasan analisis berbasis data.
+3. **Manajemen Invoice**: Pencatatan invoice dengan filter status lengkap (Semua, Belum Lunas, Jatuh Tempo, Lunas) serta fitur pelunasan invoice dalam satu klik.
+4. **Profil & Riwayat Klien**: Menyediakan detail data klien, akumulasi transaksi, persentase ketepatan waktu pembayaran, dan log riwayat transaksi pembayaran.
+5. **Sistem Fallback Lokal**: Otomatis beralih ke database lokal berbasis JSON jika kredensial AWS tidak diatur, memudahkan pengujian tanpa konfigurasi rumit.
+
+---
+
+## 🛠️ Teknologi yang Digunakan
 
 * **Frontend**: Next.js 16 (App Router) + Tailwind CSS 4
 * **Backend**: Next.js API Routes (Serverless Functions)
-* **Database**: AWS DynamoDB (Single-Table Design) / Local JSON Fallback
+* **Database**: AWS DynamoDB (Single-Table Design) / Database JSON Lokal
 * **AI Engine**: Google Gemini 1.5 Flash (via Google AI Studio REST API)
 * **Hosting**: Vercel
 
 ---
 
-## 📐 DynamoDB Single-Table Schema
+## 📐 Desain Single-Table DynamoDB
 
-All application entities are stored in a single table (`LunasinTable`) using the following keys:
+Seluruh data aplikasi disimpan dalam satu tabel tunggal (`LunasinTable`) menggunakan struktur kunci berikut:
 
-| Entity | Partition Key (PK) | Sort Key (SK) | Key Attributes |
+| Entitas | Partition Key (PK) | Sort Key (SK) | Atribut Utama |
 |---|---|---|---|
-| **Client** | `TENANT#<tenantId>` | `CLIENT#<clientId>` | `name`, `contactInfo` |
+| **Klien** | `TENANT#<tenantId>` | `CLIENT#<clientId>` | `name`, `contactInfo` |
 | **Invoice** | `TENANT#<tenantId>` | `INVOICE#<invoiceId>` | `clientId`, `amount`, `status`, `issueDate`, `dueDate`, `notes` |
-| **Payment History** | `CLIENT#<clientId>` | `PAYMENT#<paymentId>` | `invoiceId`, `paidDate`, `wasLate` (bool), `daysLate` |
+| **Riwayat Pembayaran** | `CLIENT#<clientId>` | `PAYMENT#<paymentId>` | `invoiceId`, `paidDate`, `wasLate` (bool), `daysLate` |
 
-### Global Secondary Indexes (GSI)
-* **GSI1**: Used for querying invoices by due date range.
+### Global Secondary Index (GSI)
+* **GSI1**: Digunakan untuk query pencarian invoice berdasarkan rentang tanggal jatuh tempo.
   * `GSI1PK`: `TENANT#<tenantId>`
   * `GSI1SK`: `DUEDATE#<YYYY-MM-DD>#INVOICE#<invoiceId>`
 
 ---
 
-## 💻 Local Setup & Installation
+## 💻 Panduan Instalasi Lokal
 
-### 1. Clone the Repository
+### 1. Kloning Repositori
 ```bash
 git clone https://github.com/Dwinur01/lunasin-AI.git
 cd lunasin-AI
 ```
 
-### 2. Install Dependencies
+### 2. Instal Dependensi
 ```bash
 npm install
 ```
 
-### 3. Configure Environment Variables
-Create a `.env.local` file in the root directory and add the following variables:
+### 3. Konfigurasi Environment Variables
+Buat file bernama `.env.local` di direktori utama proyek, lalu isi dengan format berikut:
 
 ```env
-# AWS DynamoDB Configuration (Optional - Falls back to local JSON if left empty)
+# Konfigurasi AWS DynamoDB (Opsional - Otomatis beralih ke JSON lokal jika dikosongkan)
 AWS_ACCESS_KEY_ID=YOUR_AWS_ACCESS_KEY_ID
 AWS_SECRET_ACCESS_KEY=YOUR_AWS_SECRET_ACCESS_KEY
 AWS_REGION=ap-southeast-1
 DYNAMODB_TABLE_NAME=LunasinTable
 
-# Gemini API Configuration (Required for AI insights)
+# Konfigurasi Gemini API (Diperlukan untuk analisis AI)
 GEMINI_API_KEY=YOUR_GEMINI_API_KEY
 ```
 
-*Note: If you do not provide AWS credentials, the application will automatically read and write data to the local file `src/lib/local_db.json`. The app comes pre-seeded out of the box!*
+*Catatan: Jika Anda tidak memasukkan kredensial AWS, aplikasi akan otomatis membaca dan menyimpan data pada file lokal `src/lib/local_db.json` yang sudah terisi data bawaan.*
 
-### 4. Run the Development Server
+### 4. Jalankan Aplikasi
 ```bash
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Buka alamat [http://localhost:3000](http://localhost:3000) pada browser Anda.
 
 ---
 
-## 🧪 Seeding Data
-If you are connected to AWS DynamoDB and want to populate your table with realistic test data, click the **"Seed Dummy Data"** button on the dashboard or visit:
+## 🧪 Mengisi Data Percobaan (Seeding)
+Jika Anda terhubung ke AWS DynamoDB dan ingin mengisi tabel Anda dengan data simulasi transaksi secara instan, klik tombol **"Seed Dummy Data"** di dashboard atau kunjungi:
 `http://localhost:3000/api/seed`
