@@ -1,0 +1,232 @@
+[
+  {
+    "PK": "TENANT#default-tenant",
+    "SK": "CLIENT#c1",
+    "name": "CV Abadi Jaya",
+    "contactInfo": "abadi.jaya@mail.com"
+  },
+  {
+    "PK": "TENANT#default-tenant",
+    "SK": "CLIENT#c2",
+    "name": "PT Maju Bersama",
+    "contactInfo": "contact@majubersama.co.id"
+  },
+  {
+    "PK": "TENANT#default-tenant",
+    "SK": "CLIENT#c3",
+    "name": "Toko Berkah Mandiri",
+    "contactInfo": "berkah.mandiri@gmail.com"
+  },
+  {
+    "PK": "TENANT#default-tenant",
+    "SK": "CLIENT#c4",
+    "name": "PT Indo Supply",
+    "contactInfo": "finance@indosupply.com"
+  },
+  {
+    "PK": "TENANT#default-tenant",
+    "SK": "CLIENT#c5",
+    "name": "Sinar Surya Agency",
+    "contactInfo": "sinarsurya.agency@mail.com"
+  },
+  {
+    "PK": "TENANT#default-tenant",
+    "SK": "INVOICE#inv1",
+    "clientId": "c1",
+    "amount": 15000000,
+    "status": "PAID",
+    "issueDate": "2026-06-01",
+    "dueDate": "2026-06-15",
+    "notes": "Layanan IT Support Juni",
+    "GSI1PK": "TENANT#default-tenant",
+    "GSI1SK": "DUEDATE#2026-06-15#INVOICE#inv1"
+  },
+  {
+    "PK": "TENANT#default-tenant",
+    "SK": "INVOICE#inv2",
+    "clientId": "c1",
+    "amount": 12500000,
+    "status": "UNPAID",
+    "issueDate": "2026-06-20",
+    "dueDate": "2026-07-05",
+    "notes": "Layanan IT Support Juli",
+    "GSI1PK": "TENANT#default-tenant",
+    "GSI1SK": "DUEDATE#2026-07-05#INVOICE#inv2"
+  },
+  {
+    "PK": "TENANT#default-tenant",
+    "SK": "INVOICE#inv3",
+    "clientId": "c2",
+    "amount": 25000000,
+    "status": "PAID",
+    "issueDate": "2026-05-01",
+    "dueDate": "2026-05-15",
+    "notes": "Supply Bahan Baku Kloter 1",
+    "GSI1PK": "TENANT#default-tenant",
+    "GSI1SK": "DUEDATE#2026-05-15#INVOICE#inv3"
+  },
+  {
+    "PK": "TENANT#default-tenant",
+    "SK": "INVOICE#inv4",
+    "clientId": "c2",
+    "amount": 25000000,
+    "status": "PAID",
+    "issueDate": "2026-05-20",
+    "dueDate": "2026-06-05",
+    "notes": "Supply Bahan Baku Kloter 2",
+    "GSI1PK": "TENANT#default-tenant",
+    "GSI1SK": "DUEDATE#2026-06-05#INVOICE#inv4"
+  },
+  {
+    "PK": "TENANT#default-tenant",
+    "SK": "INVOICE#inv5",
+    "clientId": "c2",
+    "amount": 35000000,
+    "status": "OVERDUE",
+    "issueDate": "2026-06-01",
+    "dueDate": "2026-06-15",
+    "notes": "Supply Bahan Baku Kloter 3",
+    "GSI1PK": "TENANT#default-tenant",
+    "GSI1SK": "DUEDATE#2026-06-15#INVOICE#inv5"
+  },
+  {
+    "PK": "TENANT#default-tenant",
+    "SK": "INVOICE#inv6",
+    "clientId": "c3",
+    "amount": 8000000,
+    "status": "PAID",
+    "issueDate": "2026-05-10",
+    "dueDate": "2026-05-24",
+    "notes": "Pembelian Inventaris",
+    "GSI1PK": "TENANT#default-tenant",
+    "GSI1SK": "DUEDATE#2026-05-24#INVOICE#inv6"
+  },
+  {
+    "PK": "TENANT#default-tenant",
+    "SK": "INVOICE#inv7",
+    "clientId": "c3",
+    "amount": 9500000,
+    "status": "PAID",
+    "issueDate": "2026-06-05",
+    "dueDate": "2026-06-19",
+    "notes": "Servis Mesin Produksi",
+    "GSI1PK": "TENANT#default-tenant",
+    "GSI1SK": "DUEDATE#2026-06-19#INVOICE#inv7"
+  },
+  {
+    "PK": "TENANT#default-tenant",
+    "SK": "INVOICE#inv8",
+    "clientId": "c3",
+    "amount": 12000000,
+    "status": "UNPAID",
+    "issueDate": "2026-06-25",
+    "dueDate": "2026-07-09",
+    "notes": "Sewa Peralatan Tambahan",
+    "GSI1PK": "TENANT#default-tenant",
+    "GSI1SK": "DUEDATE#2026-07-09#INVOICE#inv8"
+  },
+  {
+    "PK": "TENANT#default-tenant",
+    "SK": "INVOICE#inv9",
+    "clientId": "c4",
+    "amount": 18000000,
+    "status": "PAID",
+    "issueDate": "2026-06-10",
+    "dueDate": "2026-06-24",
+    "notes": "Pengiriman Spareparts A",
+    "GSI1PK": "TENANT#default-tenant",
+    "GSI1SK": "DUEDATE#2026-06-24#INVOICE#inv9"
+  },
+  {
+    "PK": "TENANT#default-tenant",
+    "SK": "INVOICE#inv10",
+    "clientId": "c4",
+    "amount": 22000000,
+    "status": "UNPAID",
+    "issueDate": "2026-06-20",
+    "dueDate": "2026-07-02",
+    "notes": "Pengiriman Spareparts B",
+    "GSI1PK": "TENANT#default-tenant",
+    "GSI1SK": "DUEDATE#2026-07-02#INVOICE#inv10"
+  },
+  {
+    "PK": "TENANT#default-tenant",
+    "SK": "INVOICE#inv11",
+    "clientId": "c5",
+    "amount": 5000000,
+    "status": "UNPAID",
+    "issueDate": "2026-06-22",
+    "dueDate": "2026-07-07",
+    "notes": "Desain Konten Sosmed Juni",
+    "GSI1PK": "TENANT#default-tenant",
+    "GSI1SK": "DUEDATE#2026-07-07#INVOICE#inv11"
+  },
+  {
+    "PK": "CLIENT#c1",
+    "SK": "PAYMENT#p1",
+    "invoiceId": "inv1",
+    "paidDate": "2026-06-14",
+    "wasLate": false,
+    "daysLate": 0
+  },
+  {
+    "PK": "CLIENT#c2",
+    "SK": "PAYMENT#p2",
+    "invoiceId": "inv3",
+    "paidDate": "2026-05-25",
+    "wasLate": true,
+    "daysLate": 10
+  },
+  {
+    "PK": "CLIENT#c2",
+    "SK": "PAYMENT#p3",
+    "invoiceId": "inv4",
+    "paidDate": "2026-06-22",
+    "wasLate": true,
+    "daysLate": 17
+  },
+  {
+    "PK": "CLIENT#c3",
+    "SK": "PAYMENT#p4",
+    "invoiceId": "inv6",
+    "paidDate": "2026-05-24",
+    "wasLate": false,
+    "daysLate": 0
+  },
+  {
+    "PK": "CLIENT#c3",
+    "SK": "PAYMENT#p5",
+    "invoiceId": "inv7",
+    "paidDate": "2026-06-25",
+    "wasLate": true,
+    "daysLate": 6
+  },
+  {
+    "PK": "CLIENT#c4",
+    "SK": "PAYMENT#p6",
+    "invoiceId": "inv9",
+    "paidDate": "2026-06-23",
+    "wasLate": false,
+    "daysLate": 0
+  },
+  {
+    "PK": "TENANT#default-tenant",
+    "SK": "INVOICE#inv_1782735781002",
+    "clientId": "c2",
+    "amount": 140000,
+    "status": "PAID",
+    "issueDate": "2026-06-29",
+    "dueDate": "2026-07-13",
+    "notes": "",
+    "GSI1PK": "TENANT#default-tenant",
+    "GSI1SK": "DUEDATE#2026-07-13#INVOICE#inv_1782735781002"
+  },
+  {
+    "PK": "CLIENT#c2",
+    "SK": "PAYMENT#p_inv_1782735781002",
+    "invoiceId": "inv_1782735781002",
+    "paidDate": "2026-06-29",
+    "wasLate": false,
+    "daysLate": 0
+  }
+]

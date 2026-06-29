@@ -18,11 +18,10 @@ Proyek ini dibangun untuk kompetisi **H0 — Hack the Zero Stack (Vercel v0 + AW
 
 ## 🛠️ Teknologi yang Digunakan
 
-* **Frontend**: Next.js 16 (App Router) + Tailwind CSS 4
-* **Backend**: Next.js API Routes (Serverless Functions)
+* **Frontend**: Vite + React 19 + TypeScript + Tailwind CSS 4 + React Router DOM
+* **Backend**: Express.js + Node.js (TypeScript via `tsx`)
 * **Database**: AWS DynamoDB (Single-Table Design) / Database JSON Lokal
 * **AI Engine**: Google Gemini 1.5 Flash (via Google AI Studio REST API)
-* **Hosting**: Vercel
 
 ---
 
@@ -76,10 +75,10 @@ GEMINI_API_KEY=YOUR_GEMINI_API_KEY
 ```bash
 npm run dev
 ```
-Buka alamat [http://localhost:3000](http://localhost:3000) pada browser Anda.
+Buka alamat [http://localhost:5173](http://localhost:5173) pada browser Anda untuk mengakses aplikasi. Server backend akan berjalan otomatis secara paralel di [http://localhost:5000](http://localhost:5000).
 
 ---
 
 ## 🧪 Mengisi Data Percobaan (Seeding)
 Jika Anda terhubung ke AWS DynamoDB dan ingin mengisi tabel Anda dengan data simulasi transaksi secara instan, klik tombol **"Seed Dummy Data"** di dashboard atau kunjungi:
-`http://localhost:3000/api/seed`
+`http://localhost:5000/api/seed`
