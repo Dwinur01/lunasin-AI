@@ -254,7 +254,7 @@ export default function Invoices() {
               </thead>
               <tbody className="divide-y divide-slate-800/60 text-sm">
                 {invoices.map((inv) => (
-                  <tr key={inv.invoiceId} className="hover:bg-slate-900/40 hover:scale-[1.002] transition-all duration-200 origin-left">
+                  <tr key={inv.invoiceId} className="hover:bg-slate-900/40 transition-colors duration-200">
                     <td className="px-6 py-4 font-mono text-slate-300">{inv.invoiceId}</td>
                     <td className="px-6 py-4 text-slate-100 font-semibold">{inv.clientName}</td>
                     <td className="px-6 py-4 font-mono text-slate-200">{formatRupiah(inv.amount)}</td>

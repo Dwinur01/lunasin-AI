@@ -170,7 +170,7 @@ export default function Clients() {
                             setSelectedClient(client);
                             setIsAddingClient(false);
                           }}
-                          className={`cursor-pointer hover:bg-slate-900/40 hover:scale-[1.002] transition-all duration-200 origin-left ${
+                          className={`cursor-pointer hover:bg-slate-900/40 transition-colors duration-200 ${
                             isSelected ? "bg-indigo-500/15 border-l-2 border-indigo-500 shadow-sm" : ""
                           }`}
                         >

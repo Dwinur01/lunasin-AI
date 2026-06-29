@@ -241,7 +241,7 @@ export default function Dashboard() {
                   </thead>
                   <tbody className="divide-y divide-slate-800/60 text-sm">
                     {recentInvoices.map((inv) => (
-                      <tr key={inv.invoiceId} className="hover:bg-slate-900/40 hover:scale-[1.003] transition-all duration-200 origin-left">
+                      <tr key={inv.invoiceId} className="hover:bg-slate-900/40 transition-colors duration-200">
                         <td className="py-3.5 font-mono text-slate-300">{inv.invoiceId}</td>
                         <td className="py-3.5 text-slate-200 font-semibold">{inv.clientName}</td>
                         <td className="py-3.5 font-mono text-slate-100">{formatRupiah(inv.amount)}</td>
