@@ -104,6 +104,93 @@ export default function Clients() {
     return riskyClients.find((rc) => rc.clientId === clientId) || null;
   };
 
+  const getCreditScore = (client: Client) => {
+    let score = 100;
+    const history = client.paymentHistory;
+    if (history.length === 0) return 100;
+
+    const lateCount = history.filter((h) => h.wasLate).length;
+    const totalCount = history.length;
+    const lateRate = lateCount / totalCount;
+
+    // Deduct up to 30 points for late payment rate
+    score -= lateRate * 30;
+
+    // Calculate average days late
+    const latePayments = history.filter((h) => h.wasLate);
+    const avgDaysLate = latePayments.length > 0
+      ? latePayments.reduce((sum, h) => sum + h.daysLate, 0) / latePayments.length
+      : 0;
+
+    // Deduct up to 50 points for average days late
+    score -= Math.min(50, avgDaysLate * 1.5);
+
+    return Math.max(10, Math.round(score));
+  };
+
+  const renderCreditScoreMeter = (client: Client) => {
+    const score = getCreditScore(client);
+    const radius = 30;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDashoffset = circumference - (score / 100) * circumference;
+
+    let colorClass = "stroke-emerald-500";
+    let textClass = "text-emerald-400";
+    let label = "Sangat Baik";
+
+    if (score < 50) {
+      colorClass = "stroke-rose-500";
+      textClass = "text-rose-400";
+      label = "Kurang / Risiko Tinggi";
+    } else if (score < 80) {
+      colorClass = "stroke-amber-500";
+      textClass = "text-amber-400";
+      label = "Cukup / Risiko Sedang";
+    }
+
+    return (
+      <div className="bg-slate-950/40 border border-slate-900 rounded-xl p-4 flex items-center justify-between">
+        <div className="space-y-1">
+          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+            Skor Kredit Klien
+          </h4>
+          <div className="flex items-center space-x-1">
+            <span className={`text-lg font-extrabold ${textClass}`}>{score}</span>
+            <span className="text-slate-500 text-xs">/ 100</span>
+          </div>
+          <p className="text-[10px] text-slate-400 font-medium">
+            Kategori: <span className={`font-bold ${textClass}`}>{label}</span>
+          </p>
+        </div>
+        
+        <div className="relative h-16 w-16 flex items-center justify-center">
+          <svg className="absolute transform -rotate-90 w-16 h-16">
+            <circle
+              cx="32"
+              cy="32"
+              r={radius}
+              className="stroke-slate-800"
+              strokeWidth="5"
+              fill="transparent"
+            />
+            <circle
+              cx="32"
+              cy="32"
+              r={radius}
+              className={`transition-all duration-500 ease-out ${colorClass}`}
+              strokeWidth="5"
+              fill="transparent"
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+            />
+          </svg>
+          <span className={`text-xs font-black ${textClass} font-mono z-10`}>{score}%</span>
+        </div>
+      </div>
+    );
+  };
+
   const formatRupiah = (val: number) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -268,7 +355,7 @@ export default function Clients() {
                 </button>
               </form>
             ) : selectedClient ? (
-              <div className="space-y-6">
+              <div className="space-y-6 animate-fade-in">
                 {/* Header Client Info */}
                 <div>
                   <h2 className="text-xl font-bold text-white leading-tight">{selectedClient.name}</h2>
@@ -277,6 +364,9 @@ export default function Clients() {
                     📧 {selectedClient.contactInfo || "Kontak belum diatur"}
                   </p>
                 </div>
+
+                {/* Credit Score Meter */}
+                {renderCreditScoreMeter(selectedClient)}
 
                 {/* AI Risk Card */}
                 <div>

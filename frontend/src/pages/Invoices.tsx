@@ -36,6 +36,8 @@ export default function Invoices() {
   const [issueDate, setIssueDate] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [notes, setNotes] = useState("");
+  const [aiText, setAiText] = useState("");
+  const [aiProcessing, setAiProcessing] = useState(false);
 
   const fetchInvoices = async () => {
     try {
@@ -93,6 +95,58 @@ export default function Invoices() {
     setIssueDate(today);
     setDueDate(due);
     setNotes("");
+  };
+
+  const handleAIQuickInvoice = async () => {
+    if (!aiText.trim()) return;
+    try {
+      setAiProcessing(true);
+      const res = await fetch("/api/ai/parse-invoice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: aiText }),
+      });
+      const result = await res.json();
+      if (result.data) {
+        const data = result.data;
+        
+        // Reset and pre-fill form
+        resetForm();
+        
+        if (data.clientId) {
+          setClientId(data.clientId);
+          setIsNewClientMode(false);
+        } else if (data.clientName) {
+          setIsNewClientMode(true);
+          setNewClientName(data.clientName);
+        }
+        
+        if (data.amount) {
+          setAmount(data.amount.toString());
+        }
+        if (data.dueDate) {
+          setDueDate(data.dueDate);
+        }
+        if (data.notes) {
+          setNotes(data.notes);
+        }
+        
+        setIsModalOpen(true);
+        setAiText("");
+      } else {
+        alert("Gagal menganalisis teks: " + (result.message || "Respon tidak valid"));
+      }
+    } catch (err: any) {
+      alert("Error memproses teks: " + err.message);
+    } finally {
+      setAiProcessing(false);
+    }
+  };
+
+  const handleWhatsAppReminder = (inv: Invoice) => {
+    const message = `Halo *${inv.clientName}*,\n\nKami ingin mengingatkan mengenai tagihan *Invoice #${inv.invoiceId}* sebesar *${formatRupiah(inv.amount)}* yang jatuh tempo pada *${inv.dueDate}*.\n\nPembayaran dapat ditransfer melalui rekening Bank kami. Jika Anda sudah melakukan pembayaran, mohon abaikan pesan ini.\n\nTerima kasih atas kerja samanya.`;
+    const encodedText = encodeURIComponent(message);
+    window.open(`https://wa.me/?text=${encodedText}`, "_blank");
   };
 
   const handleMarkPaid = async (id: string) => {
@@ -210,6 +264,37 @@ export default function Invoices() {
         </div>
       </div>
 
+      {/* AI Quick Invoice Widget */}
+      <div className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-5 relative overflow-hidden group">
+        <div className="absolute top-0 right-0 h-20 w-20 bg-indigo-500/5 rounded-full blur-xl group-hover:bg-indigo-500/10 transition-all" />
+        <h3 className="text-sm font-bold text-indigo-400 mb-2 flex items-center space-x-1.5">
+          <span>⚡ AI Quick Invoice</span>
+          <span className="bg-indigo-500/10 text-indigo-300 text-[10px] px-1.5 py-0.5 rounded-full border border-indigo-500/20 font-mono">Gemini</span>
+        </h3>
+        <p className="text-xs text-slate-400 mb-3 font-medium">Tulis kalimat bebas dalam Bahasa Indonesia. AI akan mengekstrak klien, nominal, dan tanggal jatuh tempo secara otomatis.</p>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <textarea
+            value={aiText}
+            onChange={(e) => setAiText(e.target.value)}
+            disabled={aiProcessing}
+            rows={1}
+            placeholder="Contoh: Tagih CV Abadi Jaya sebesar 15 juta rupiah untuk pengadaan bahan baku kayu, jatuh tempo 3 minggu lagi"
+            className="flex-1 min-h-[40px] px-3.5 py-2 bg-slate-950/80 border border-slate-800 rounded-lg text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all resize-y"
+          />
+          <button
+            onClick={handleAIQuickInvoice}
+            disabled={aiProcessing || !aiText.trim()}
+            className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98] text-white text-sm font-semibold rounded-lg shadow-md transition-all duration-200 cursor-pointer flex items-center justify-center space-x-1.5 whitespace-nowrap"
+          >
+            {aiProcessing ? (
+              <span className="animate-pulse">Memproses...</span>
+            ) : (
+              <span>Buat dengan AI</span>
+            )}
+          </button>
+        </div>
+      </div>
+
       {/* Tabs Filter */}
       <div className="border-b border-slate-800 flex space-x-2">
         {["ALL", "UNPAID", "OVERDUE", "PAID"].map((tab) => (
@@ -270,14 +355,25 @@ export default function Invoices() {
                         {inv.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right flex items-center justify-end space-x-2">
                       {inv.status !== "PAID" && (
-                        <button
-                          onClick={() => handleMarkPaid(inv.invoiceId)}
-                          className="px-3 py-1 bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500 hover:text-white rounded text-xs font-semibold transition-all cursor-pointer"
-                        >
-                          Mark Paid
-                        </button>
+                        <>
+                          <button
+                            onClick={() => handleWhatsAppReminder(inv)}
+                            title="Kirim Pengingat WhatsApp"
+                            className="p-1.5 bg-green-500/10 border border-green-500/30 text-green-400 hover:bg-green-500 hover:text-white rounded transition-all cursor-pointer flex items-center justify-center"
+                          >
+                            <svg className="h-4.5 w-4.5" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.262 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.665.989 3.3 1.489 5.361 1.49 5.433 0 9.855-4.388 9.858-9.777.001-2.61-1.015-5.064-2.859-6.91C17.124 2.112 14.67 1.096 12.06 1.096c-5.442 0-9.866 4.39-9.869 9.782-.001 2.12.559 4.188 1.624 5.922l-1.063 3.882 3.979-1.036zm10.741-7.39c-.267-.134-1.583-.781-1.829-.871-.247-.09-.427-.134-.607.134-.18.269-.696.871-.853 1.05-.157.18-.315.201-.582.067-.267-.134-1.13-.417-2.153-1.331-.794-.709-1.33-1.583-1.486-1.85-.157-.269-.017-.414.117-.547.12-.12.267-.314.4-.472.133-.157.178-.269.267-.449.09-.18.045-.337-.022-.472-.067-.134-.607-1.462-.831-2.002-.219-.524-.462-.453-.635-.462-.163-.009-.35-.01-.536-.01-.187 0-.49.07-.748.35-.257.28-1.026 1.008-1.026 2.458 0 1.45 1.056 2.85 1.202 3.049.146.2 2.079 3.176 5.037 4.457.704.305 1.254.487 1.681.623.708.225 1.353.193 1.863.118.569-.085 1.583-.648 1.808-1.277.225-.63.225-1.171.157-1.277-.067-.107-.247-.174-.515-.308z"/>
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => handleMarkPaid(inv.invoiceId)}
+                            className="px-3 py-1 bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-500 hover:text-white rounded text-xs font-semibold transition-all cursor-pointer"
+                          >
+                            Mark Paid
+                          </button>
+                        </>
                       )}
                     </td>
                   </tr>

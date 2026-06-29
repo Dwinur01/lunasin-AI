@@ -204,4 +204,175 @@ ${JSON.stringify(clientHistorySummary, null, 2)}`;
   }
 });
 
+// New Endpoint: Parse Natural Language to Invoice Data
+router.post("/parse-invoice", async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text || text.trim() === "") {
+      return res.status(400).json({ status: "error", message: "Text parameter is required." });
+    }
+
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0];
+
+    // 1. Fetch all clients to provide as matching context
+    const clientsQuery = new QueryCommand({
+      TableName: TABLE_NAME,
+      KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
+      ExpressionAttributeValues: {
+        ":pk": `TENANT#${tenantId}`,
+        ":skPrefix": "CLIENT#",
+      },
+    });
+    const clientsResult = await docClient.send(clientsQuery);
+    const clientsList = (clientsResult.Items || []).map((c) => ({
+      clientId: c.SK.split("#")[1],
+      name: c.name,
+    }));
+
+    // Rule-based Fallback Parser (in case Gemini is not configured or fails)
+    const runLocalFallbackParser = () => {
+      console.log("Running local regex-based invoice parser fallback...");
+      const textLower = text.toLowerCase();
+      
+      // Try to find amount (e.g. "12.000.000", "15 juta", "10jt")
+      let amount = 0;
+      const millionMatch = textLower.match(/(\d+)\s*(juta|jt)/);
+      if (millionMatch) {
+        amount = parseInt(millionMatch[1]) * 1000000;
+      } else {
+        const numberMatch = textLower.match(/[\d.]+/g);
+        if (numberMatch) {
+          // Find the longest number string that might represent the amount
+          const numbers = numberMatch
+            .map((n: string) => n.replace(/\./g, ""))
+            .filter((n: string) => n.length >= 4)
+            .map((n: string) => parseInt(n));
+          if (numbers.length > 0) {
+            amount = Math.max(...numbers);
+          }
+        }
+      }
+
+      // Try to match client name
+      let matchedClientId = "";
+      let matchedClientName = "";
+      for (const client of clientsList) {
+        if (textLower.includes(client.name.toLowerCase())) {
+          matchedClientId = client.clientId;
+          matchedClientName = client.name;
+          break;
+        }
+      }
+
+      if (!matchedClientName) {
+        // Simple extraction for new client name (e.g. "tagih PT ABC", "ke CV XYZ")
+        const newClientMatch = text.match(/(tagih|ke|untuk)\s+([A-Z\d\s.a-z]{3,30})/);
+        matchedClientName = newClientMatch ? newClientMatch[2].trim() : "Klien Baru";
+      }
+
+      // Estimate due date (default to today + 14 days)
+      const defaultDueDate = new Date();
+      defaultDueDate.setDate(today.getDate() + 14);
+      const dueDateStr = defaultDueDate.toISOString().split("T")[0];
+
+      return {
+        clientId: matchedClientId,
+        clientName: matchedClientName,
+        amount,
+        dueDate: dueDateStr,
+        notes: "Tagihan otomatis dari input teks",
+      };
+    };
+
+    // 2. Check if Gemini is configured
+    if (!isGeminiKeyConfigured()) {
+      return res.json({
+        data: runLocalFallbackParser(),
+        _aiGenerated: false,
+        _warning: "Gemini API Key is not configured. Using local regex parser."
+      });
+    }
+
+    // 3. Prompt for Gemini
+    const systemPrompt = `Kamu adalah AI pengolah tagihan UMKM. Tugasmu adalah mengekstrak informasi invoice dari teks bahasa alami yang ditulis pengguna dan merubahnya menjadi JSON terstruktur.
+Hari ini adalah tanggal: ${todayStr} (Gunakan tanggal ini sebagai basis perhitungan tanggal jatuh tempo relatif seperti "2 minggu lagi" atau "bulan depan").
+
+Daftar klien terdaftar saat ini:
+${JSON.stringify(clientsList, null, 2)}
+
+Aturan ekstraksi:
+1. Tentukan "clientId" dengan mencocokkan nama klien di dalam teks dengan nama klien terdaftar yang paling mirip. Jika tidak ada yang mirip atau merupakan klien baru, isi "clientId" dengan string kosong "".
+2. Isi "clientName" dengan nama klien yang berhasil diekstrak dari teks.
+3. Ekstrak nominal uang ke "amount" dalam bentuk angka murni (misal: "12 juta" -> 12000000).
+4. Hitung tanggal jatuh tempo ke "dueDate" dalam format "YYYY-MM-DD". Jika tidak disebutkan tenggat waktunya, default-kan ke 14 hari dari hari ini (${todayStr}).
+5. Ekstrak deskripsi pekerjaan/barang ke "notes" (misal: "jasa pembuatan website" atau "bahan baku kayu"). Jika tidak ada, isi "Tagihan invoice".
+
+Format output harus berupa JSON saja seperti berikut:
+{
+  "clientId": "string atau kosong",
+  "clientName": "string",
+  "amount": number,
+  "dueDate": "YYYY-MM-DD",
+  "notes": "string"
+}`;
+
+    try {
+      const apiKey = process.env.GEMINI_API_KEY;
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+      const apiResponse = await fetch(geminiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: `${systemPrompt}\n\nInput Teks Pengguna: "${text}"` }]
+            }
+          ],
+          generationConfig: {
+            responseMimeType: "application/json"
+          }
+        })
+      });
+
+      if (!apiResponse.ok) {
+        throw new Error(`Gemini API returned status ${apiResponse.status}`);
+      }
+
+      const resData = (await apiResponse.json()) as any;
+      const rawText = resData.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!rawText) {
+        throw new Error("Empty response from Gemini");
+      }
+
+      const parsedData = JSON.parse(rawText.trim());
+
+      res.json({
+        data: parsedData,
+        _aiGenerated: true
+      });
+    } catch (apiError) {
+      console.error("Gemini API parsing failed, using fallback:", apiError);
+      res.json({
+        data: runLocalFallbackParser(),
+        _aiGenerated: false,
+        _warning: "Gemini parsing failed. Using local regex parser."
+      });
+    }
+  } catch (error: any) {
+    console.error("Critical error in parse-invoice API:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to parse invoice text.",
+      error: error.message || String(error),
+    });
+  }
+});
+
 export default router;
+

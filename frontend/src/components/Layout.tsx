@@ -14,8 +14,8 @@ export default function Layout() {
   }, [location.pathname]);
 
   const isLinkActive = (path: string) => {
-    if (path === "/") {
-      return location.pathname === "/";
+    if (path === "/dashboard") {
+      return location.pathname === "/dashboard";
     }
     return location.pathname.startsWith(path);
   };
@@ -40,7 +40,7 @@ export default function Layout() {
       <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-8">
-            <Link to="/" className="flex items-center space-x-2 group">
+            <Link to="/dashboard" className="flex items-center space-x-2 group">
               <span className="text-2xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent group-hover:from-indigo-300 group-hover:to-pink-300 transition-all duration-300">
                 Lunasin AI
               </span>
@@ -49,7 +49,7 @@ export default function Layout() {
               </span>
             </Link>
             <nav className="hidden md:flex space-x-2">
-              <Link to="/" className={getLinkClass("/")}>
+              <Link to="/dashboard" className={getLinkClass("/dashboard")}>
                 Dashboard
               </Link>
               <Link to="/invoices" className={getLinkClass("/invoices")}>
@@ -74,9 +74,9 @@ export default function Layout() {
         {/* Mobile navigation */}
         <div className="md:hidden border-t border-slate-800 bg-slate-900/80 px-4 py-2 flex justify-around text-xs font-semibold">
           <Link 
-            to="/" 
+            to="/dashboard" 
             className={`py-1 px-3 rounded-md transition-colors ${
-              isLinkActive("/") ? "text-indigo-400 bg-slate-800/50" : "text-slate-400"
+              isLinkActive("/dashboard") ? "text-indigo-400 bg-slate-800/50" : "text-slate-400"
             }`}
           >
             Dashboard

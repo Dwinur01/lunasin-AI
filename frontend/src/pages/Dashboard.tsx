@@ -98,6 +98,42 @@ export default function Dashboard() {
     }).format(val);
   };
 
+  // 7-day cashflow projection data
+  const getChartData = () => {
+    const today = new Date();
+    const data = [];
+    const todayStr = today.toISOString().split("T")[0];
+
+    for (let i = 0; i < 7; i++) {
+      const current = new Date();
+      current.setDate(today.getDate() + i);
+      const dateStr = current.toISOString().split("T")[0];
+      
+      // Calculate total unpaid due on this specific day
+      const dailyAmount = invoices
+        .filter((inv) => {
+          const isUnpaid = inv.status === "UNPAID" && inv.dueDate >= todayStr;
+          return isUnpaid && inv.dueDate === dateStr;
+        })
+        .reduce((sum, inv) => sum + inv.amount, 0);
+
+      // Label (e.g. "Senin", "Selasa" or date "29 Jun")
+      const dayLabel = current.toLocaleDateString("id-ID", { weekday: "short" });
+      const dateLabel = current.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+
+      data.push({
+        dateStr,
+        dayLabel,
+        dateLabel,
+        amount: dailyAmount,
+      });
+    }
+    return data;
+  };
+
+  const chartData = getChartData();
+  const maxChartAmount = Math.max(...chartData.map((d) => d.amount), 1);
+
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Welcome & Action Area */}
@@ -180,17 +216,29 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* AI Risk Alert Banner */}
-          {riskyClients.length > 0 && (
-            <div className="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 rounded-xl p-5 relative overflow-hidden">
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-amber-400 to-orange-500" />
-              <div className="flex items-start space-x-3">
-                <span className="text-2xl mt-0.5">⚠️</span>
-                <div className="space-y-2">
-                  <h3 className="text-sm font-bold text-amber-300">
-                    AI Early Warning: Deteksi Risiko Piutang Klien
-                  </h3>
-                  <div className="text-xs text-slate-300 space-y-1.5 font-medium">
+          {/* AI Risk Alert Banner (Always Visible) */}
+          <div className={`transition-all duration-300 border rounded-xl p-5 relative overflow-hidden ${
+            riskyClients.length > 0
+              ? "bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/30"
+              : "bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-emerald-500/20"
+          }`}>
+            <div className={`absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b ${
+              riskyClients.length > 0
+                ? "from-amber-400 to-orange-500"
+                : "from-emerald-400 to-teal-500"
+            }`} />
+            <div className="flex items-start space-x-3">
+              <span className="text-2xl mt-0.5">
+                {riskyClients.length > 0 ? "⚠️" : "🛡️"}
+              </span>
+              <div className="space-y-2">
+                <h3 className={`text-sm font-bold ${
+                  riskyClients.length > 0 ? "text-amber-300" : "text-emerald-300"
+                }`}>
+                  AI Early Warning: Analisis Risiko Piutang Klien
+                </h3>
+                {riskyClients.length > 0 ? (
+                  <div className="text-xs text-slate-300 space-y-1.5 font-medium font-sans">
                     {riskyClients.map((client) => (
                       <p key={client.clientId}>
                         • Klien{" "}
@@ -209,60 +257,109 @@ export default function Dashboard() {
                       </p>
                     ))}
                   </div>
+                ) : (
+                  <p className="text-xs text-slate-300 font-medium">
+                    Status: <span className="text-emerald-400 font-bold">Aman</span>. Seluruh klien Anda memiliki catatan pembayaran yang baik berdasarkan data transaksi terakhir. Tidak ada risiko keterlambatan pembayaran yang terdetectsi oleh AI saat ini.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Layout: Invoices & Chart */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Recent Invoices Table (Col Span 2) */}
+            <div className="lg:col-span-2 bg-slate-900/30 border border-slate-900 rounded-xl p-6 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-slate-200">5 Invoice Terbaru</h3>
+                  <Link to="/invoices" className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold underline">
+                    Lihat Semua Invoice
+                  </Link>
+                </div>
+
+                {recentInvoices.length === 0 ? (
+                  <div className="text-center py-12 text-slate-500">
+                    Belum ada invoice yang terdaftar. Klik "+ New Invoice" untuk membuat baru.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-slate-800/80">
+                      <thead>
+                        <tr className="text-left text-xs font-semibold text-slate-400 tracking-wider">
+                          <th className="pb-3">Invoice ID</th>
+                          <th className="pb-3">Klien</th>
+                          <th className="pb-3">Nominal</th>
+                          <th className="pb-3">Jatuh Tempo</th>
+                          <th className="pb-3 text-right">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800/60 text-sm">
+                        {recentInvoices.map((inv) => (
+                          <tr key={inv.invoiceId} className="hover:bg-slate-900/40 transition-colors duration-200">
+                            <td className="py-3.5 font-mono text-slate-300">{inv.invoiceId}</td>
+                            <td className="py-3.5 text-slate-200 font-semibold">{inv.clientName}</td>
+                            <td className="py-3.5 font-mono text-slate-100">{formatRupiah(inv.amount)}</td>
+                            <td className="py-3.5 text-slate-400">{inv.dueDate}</td>
+                            <td className="py-3.5 text-right">
+                              <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                                inv.status === "PAID"
+                                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                                  : inv.status === "OVERDUE"
+                                  ? "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                                  : "bg-slate-800 text-slate-400 border border-slate-700"
+                              }`}>
+                                {inv.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Cashflow Chart (Col Span 1) */}
+            <div className="bg-slate-900/30 border border-slate-900 rounded-xl p-6 flex flex-col justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-slate-200 mb-2">Proyeksi Kas 7 Hari</h3>
+                <p className="text-xs text-slate-400 mb-4">Grafik kas masuk berdasarkan tanggal jatuh tempo terdekat.</p>
+                
+                <div className="flex items-end justify-between h-48 pt-6 pb-2 px-1 relative">
+                  {chartData.map((day, index) => {
+                    const percentHeight = (day.amount / maxChartAmount) * 80; // Max 80% height
+                    return (
+                      <div key={index} className="flex flex-col items-center flex-1 group relative cursor-pointer">
+                        {/* Tooltip */}
+                        <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-slate-950 border border-slate-800 text-[10px] p-2 rounded-lg pointer-events-none shadow-xl z-20 whitespace-nowrap text-center">
+                          <p className="text-slate-400 font-semibold">{day.dateLabel}</p>
+                          <p className="text-indigo-400 font-bold font-mono mt-0.5">{formatRupiah(day.amount)}</p>
+                        </div>
+                        
+                        {/* Bar */}
+                        <div className="w-5 bg-gradient-to-t from-indigo-650 to-indigo-500 rounded-t-md group-hover:from-indigo-500 group-hover:to-purple-400 group-hover:shadow-[0_0_12px_rgba(99,102,241,0.25)] transition-all duration-300 relative"
+                             style={{ height: `${Math.max(day.amount > 0 ? 4 : 0, percentHeight)}%` }}>
+                          {day.amount > 0 && (
+                            <div className="absolute top-0 left-0 right-0 h-0.5 bg-white/30 rounded-t-md" />
+                          )}
+                        </div>
+
+                        {/* Labels */}
+                        <span className="text-[9px] font-bold text-slate-400 mt-2 font-mono">{day.dayLabel}</span>
+                        <span className="text-[8px] text-slate-500 font-mono">{day.dateLabel.split(" ")[0]}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* Bottom Grid: Recent Invoices */}
-          <div className="bg-slate-900/30 border border-slate-900 rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-slate-200">5 Invoice Terbaru</h3>
-              <Link to="/invoices" className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold underline">
-                Lihat Semua Invoice
-              </Link>
+              <div className="mt-4 pt-4 border-t border-slate-800/80 flex justify-between items-center text-xs">
+                <span className="text-slate-400">Total Proyeksi 7 Hari:</span>
+                <span className="font-bold text-emerald-400 font-mono text-sm">{formatRupiah(projectedIncome)}</span>
+              </div>
             </div>
-
-            {recentInvoices.length === 0 ? (
-              <div className="text-center py-12 text-slate-500">
-                Belum ada invoice yang terdaftar. Klik "+ New Invoice" untuk membuat baru.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-800/80">
-                  <thead>
-                    <tr className="text-left text-xs font-semibold text-slate-400 tracking-wider">
-                      <th className="pb-3">Invoice ID</th>
-                      <th className="pb-3">Klien</th>
-                      <th className="pb-3">Nominal</th>
-                      <th className="pb-3">Jatuh Tempo</th>
-                      <th className="pb-3 text-right">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/60 text-sm">
-                    {recentInvoices.map((inv) => (
-                      <tr key={inv.invoiceId} className="hover:bg-slate-900/40 transition-colors duration-200">
-                        <td className="py-3.5 font-mono text-slate-300">{inv.invoiceId}</td>
-                        <td className="py-3.5 text-slate-200 font-semibold">{inv.clientName}</td>
-                        <td className="py-3.5 font-mono text-slate-100">{formatRupiah(inv.amount)}</td>
-                        <td className="py-3.5 text-slate-400">{inv.dueDate}</td>
-                        <td className="py-3.5 text-right">
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                            inv.status === "PAID"
-                              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                              : inv.status === "OVERDUE"
-                              ? "bg-rose-500/10 text-rose-400 border border-rose-500/20"
-                              : "bg-slate-800 text-slate-400 border border-slate-700"
-                          }`}>
-                            {inv.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
           </div>
         </>
       )}
