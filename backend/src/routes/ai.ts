@@ -354,17 +354,9 @@ router.post("/parse-invoice", async (req, res) => {
     const today = new Date();
     const todayStr = today.toISOString().split("T")[0];
 
-    // 1. Fetch all clients to provide as matching context
-    const clientsQuery = new QueryCommand({
-      TableName: TABLE_NAME,
-      KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
-      ExpressionAttributeValues: {
-        ":pk": `TENANT#${tenantId}`,
-        ":skPrefix": "CLIENT#",
-      },
-    });
-    const clientsResult = await docClient.send(clientsQuery);
-    const clientsList = (clientsResult.Items || []).map((c) => ({
+    // 1. Fetch all clients using dbService (supports AWS & local fallback automatically!)
+    const rawClients = await dbService.getClients(tenantId);
+    const clientsList = rawClients.map((c: any) => ({
       clientId: c.SK.split("#")[1],
       name: c.name,
     }));
