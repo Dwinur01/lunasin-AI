@@ -69,6 +69,13 @@ export default function Layout() {
             <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-sm text-white shadow-[0_0_15px_rgba(99,102,241,0.2)] hover:scale-105 transition-transform cursor-pointer">
               M
             </div>
+            <Link
+              to="/"
+              className="px-3 py-1.5 bg-slate-800/60 hover:bg-rose-500/10 hover:scale-[1.02] active:scale-[0.98] text-slate-300 hover:text-rose-400 text-xs font-bold rounded-lg border border-slate-850 hover:border-rose-500/20 transition-all duration-200 cursor-pointer flex items-center space-x-1 shadow-sm"
+            >
+              <span>Logout</span>
+              <span className="text-xs">➔</span>
+            </Link>
           </div>
         </div>
         {/* Mobile navigation */}
