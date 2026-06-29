@@ -1,6 +1,7 @@
 import express from "express";
 import { QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { docClient, TABLE_NAME } from "../lib/dynamodb.js";
+import { dbService } from "../lib/dbService.js";
 
 const router = express.Router();
 const tenantId = "default-tenant";
@@ -204,6 +205,144 @@ ${JSON.stringify(clientHistorySummary, null, 2)}`;
   }
 });
 
+// New Endpoint: AI Financial Advisory
+router.post("/financial-advisory", async (req, res) => {
+  try {
+    const today = new Date().toISOString().split("T")[0];
+
+    // 1. Fetch invoices and clients to build context
+    const invoices = await dbService.getInvoices();
+    const clients = await dbService.getClients();
+
+    const totalOutstanding = invoices
+      .filter((inv: any) => inv.status === "UNPAID" || (inv.status === "UNPAID" && inv.dueDate < today))
+      .reduce((sum: number, inv: any) => sum + inv.amount, 0);
+
+    const overdueInvoices = invoices.filter(
+      (inv: any) => inv.status === "OVERDUE" || (inv.status === "UNPAID" && inv.dueDate < today)
+    );
+    const totalOverdue = overdueInvoices.reduce((sum: number, inv: any) => sum + inv.amount, 0);
+
+    // Get risky clients (simple calculation)
+    interface RiskyClientItem {
+      name: string;
+      overdueCount: number;
+      overdueAmount: number;
+    }
+    
+    const riskyClientsList: RiskyClientItem[] = [];
+    for (const client of clients) {
+      const clientId = client.SK.split("#")[1];
+      const clientInvoices = invoices.filter((i: any) => i.clientId === clientId);
+      const overdue = clientInvoices.filter((i: any) => i.status === "OVERDUE" || (i.status === "UNPAID" && i.dueDate < today));
+      if (overdue.length > 0) {
+        riskyClientsList.push({
+          name: client.name,
+          overdueCount: overdue.length,
+          overdueAmount: overdue.reduce((sum: number, i: any) => sum + i.amount, 0),
+        });
+      }
+    }
+
+    const generateLocalAdvisoryFallback = () => {
+      console.log("Generating local rule-based financial advisory fallback...");
+      const tips = [];
+      if (totalOverdue > 0) {
+        tips.push(
+          `Anda memiliki tagihan overdue sebesar ${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(totalOverdue)}. Prioritaskan pengiriman pengingat WhatsApp kepada klien terkait hari ini.`
+        );
+      } else {
+        tips.push("Arus kas Anda saat ini sangat sehat tanpa adanya tagihan yang terlambat bayar (overdue). Pertahankan ritme penagihan ini!");
+      }
+
+      if (riskyClientsList.length > 0) {
+        const topRisky = riskyClientsList.sort((a: RiskyClientItem, b: RiskyClientItem) => b.overdueAmount - a.overdueAmount)[0];
+        tips.push(
+          `Klien ${topRisky.name} memiliki tunggakan terbesar senilai ${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(topRisky.overdueAmount)}. Disarankan untuk menangguhkan layanan baru bagi klien ini sementara waktu.`
+        );
+      } else {
+        tips.push("Seluruh klien Anda saat ini memiliki reputasi kredit yang baik. Anda dapat mempertimbangkan opsi ekspansi bisnis atau memberikan tenor lebih longgar bagi klien loyal.");
+      }
+
+      tips.push("Lakukan review kas mingguan setiap hari Jumat untuk memastikan proyeksi arus kas 7 hari ke depan selalu terpenuhi guna menjaga likuiditas operasional.");
+      return tips;
+    };
+
+    if (!isGeminiKeyConfigured()) {
+      return res.json({
+        recommendations: generateLocalAdvisoryFallback(),
+        _aiGenerated: false,
+        _warning: "Gemini API Key is not configured. Displaying local rule-based financial advisory."
+      });
+    }
+
+    const systemPrompt = `Kamu adalah konsultan keuangan profesional khusus untuk UMKM Indonesia. Analisis ringkasan kesehatan keuangan usaha berikut dan berikan TEPAT 3 rekomendasi bisnis/tindakan taktis keuangan dalam Bahasa Indonesia.
+Setiap rekomendasi harus sangat spesifik, langsung pada inti masalah, dan ditulis maksimal 2 kalimat. Jangan gunakan poin penomoran di dalam teks rekomendasi itu sendiri, cukup kembalikan dalam format JSON array berisi 3 string.
+
+Format output wajib berupa JSON array:
+["rekomendasi 1", "rekomendasi 2", "rekomendasi 3"]`;
+
+    const userPrompt = `Data Keuangan Usaha:
+- Total Piutang Aktif: ${totalOutstanding}
+- Total Tagihan Terlambat (Overdue): ${totalOverdue}
+- Jumlah Invoice Overdue: ${overdueInvoices.length}
+- Klien Menunggak: ${JSON.stringify(riskyClientsList)}`;
+
+    try {
+      const apiKey = process.env.GEMINI_API_KEY;
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+      const apiResponse = await fetch(geminiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }]
+            }
+          ],
+          generationConfig: {
+            responseMimeType: "application/json"
+          }
+        })
+      });
+
+      if (!apiResponse.ok) {
+        throw new Error(`Gemini API status ${apiResponse.status}`);
+      }
+
+      const resData = (await apiResponse.json()) as any;
+      const rawText = resData.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!rawText) {
+        throw new Error("Empty response from Gemini");
+      }
+
+      const recommendations = JSON.parse(rawText.trim());
+
+      res.json({
+        recommendations,
+        _aiGenerated: true
+      });
+    } catch (apiError) {
+      console.error("Gemini financial advisory failed, using fallback:", apiError);
+      res.json({
+        recommendations: generateLocalAdvisoryFallback(),
+        _aiGenerated: false,
+        _warning: "Gemini API call failed. Using local rule-based advisory."
+      });
+    }
+  } catch (error: any) {
+    console.error("Critical error in financial-advisory API:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Gagal menyusun rekomendasi keuangan.",
+      error: error.message || String(error),
+    });
+  }
+});
+
 // New Endpoint: Parse Natural Language to Invoice Data
 router.post("/parse-invoice", async (req, res) => {
   try {
@@ -369,6 +508,266 @@ Format output harus berupa JSON saja seperti berikut:
     res.status(500).json({
       status: "error",
       message: "Failed to parse invoice text.",
+      error: error.message || String(error),
+    });
+  }
+});
+
+// New Endpoint: AI Payment Receipt Verification (Vision OCR)
+router.post("/verify-receipt", async (req, res) => {
+  try {
+    const { image, mimeType } = req.body;
+    if (!image) {
+      return res.status(400).json({ status: "error", message: "Image data is required." });
+    }
+
+    const todayStr = new Date().toISOString().split("T")[0];
+
+    // 1. Fetch all unpaid/overdue invoices to match against
+    const invoices = await dbService.getInvoices();
+    const clients = await dbService.getClients();
+    const clientMap = new Map(clients.map((c) => [c.SK.split("#")[1], c.name]));
+    
+    const unpaidInvoices = invoices
+      .filter((inv) => inv.status === "UNPAID" || inv.status === "OVERDUE" || (inv.status === "UNPAID" && inv.dueDate < todayStr))
+      .map((inv) => ({
+        invoiceId: inv.SK.split("#")[1],
+        clientId: inv.clientId,
+        clientName: clientMap.get(inv.clientId) || "Unknown",
+        amount: inv.amount,
+        dueDate: inv.dueDate,
+      }));
+
+    const runLocalFallbackReceiptVerify = () => {
+      console.log("Running local receipt verification fallback...");
+      if (unpaidInvoices.length > 0) {
+        const mockInv = unpaidInvoices[0];
+        return {
+          parsedData: {
+            senderName: mockInv.clientName,
+            bankName: "BCA",
+            amount: mockInv.amount,
+            transferDate: todayStr,
+            invoiceId: mockInv.invoiceId,
+          },
+          matchedInvoice: mockInv,
+        };
+      }
+      return {
+        parsedData: {
+          senderName: "CV Abadi Jaya",
+          bankName: "BCA",
+          amount: 15000000,
+          transferDate: todayStr,
+          invoiceId: "inv_1",
+        },
+        matchedInvoice: null,
+      };
+    };
+
+    if (!isGeminiKeyConfigured()) {
+      return res.json({
+        result: runLocalFallbackReceiptVerify(),
+        _aiGenerated: false,
+        _warning: "Gemini API Key is not configured. Using local simulated verification."
+      });
+    }
+
+    const systemPrompt = `Kamu adalah AI verifikator bukti transfer bank. Tugasmu adalah menganalisis gambar bukti transfer yang diberikan dan mengekstrak data penting menjadi JSON terstruktur.
+Ekstrak fields berikut:
+- "senderName": Nama pengirim/pemilik rekening pengirim (string).
+- "bankName": Nama bank asal/tujuan (string, misal "BCA", "Mandiri", "BRI").
+- "amount": Nominal dana yang ditransfer (number murni, tanpa titik/koma/Rp).
+- "transferDate": Tanggal transfer (string, format YYYY-MM-DD).
+- "invoiceId": Jika tertulis nomor invoice/tagihan di berita acara/keterangan transfer, ekstraksi ke field ini. Jika tidak ada, kosongkan "".
+
+Format output harus berupa JSON saja:
+{
+  "senderName": "string",
+  "bankName": "string",
+  "amount": number,
+  "transferDate": "YYYY-MM-DD",
+  "invoiceId": "string"
+}`;
+
+    try {
+      const apiKey = process.env.GEMINI_API_KEY;
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+      const apiResponse = await fetch(geminiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [
+                { text: systemPrompt },
+                {
+                  inlineData: {
+                    mimeType: mimeType || "image/jpeg",
+                    data: image
+                  }
+                }
+              ]
+            }
+          ],
+          generationConfig: {
+            responseMimeType: "application/json"
+          }
+        })
+      });
+
+      if (!apiResponse.ok) {
+        throw new Error(`Gemini Vision API status ${apiResponse.status}`);
+      }
+
+      const resData = (await apiResponse.json()) as any;
+      const rawText = resData.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!rawText) {
+        throw new Error("Empty response from Gemini Vision");
+      }
+
+      const parsedData = JSON.parse(rawText.trim());
+
+      // Match the parsed data with our unpaid invoices
+      let matchedInvoice = null;
+      if (parsedData.invoiceId) {
+        matchedInvoice = unpaidInvoices.find(
+          (inv) => inv.invoiceId.toLowerCase() === parsedData.invoiceId.toLowerCase()
+        ) || null;
+      }
+
+      if (!matchedInvoice && parsedData.amount) {
+        const amountMatches = unpaidInvoices.filter((inv) => inv.amount === parsedData.amount);
+        if (amountMatches.length === 1) {
+          matchedInvoice = amountMatches[0];
+        } else if (amountMatches.length > 1 && parsedData.senderName) {
+          const senderLower = parsedData.senderName.toLowerCase();
+          matchedInvoice = amountMatches.find(
+            (inv) => senderLower.includes(inv.clientName.toLowerCase()) || inv.clientName.toLowerCase().includes(senderLower)
+          ) || amountMatches[0];
+        }
+      }
+
+      res.json({
+        result: {
+          parsedData,
+          matchedInvoice,
+        },
+        _aiGenerated: true
+      });
+    } catch (apiError) {
+      console.error("Gemini Vision API call failed, using fallback:", apiError);
+      res.json({
+        result: runLocalFallbackReceiptVerify(),
+        _aiGenerated: false,
+        _warning: "Gemini Vision API call failed. Using local simulated verification."
+      });
+    }
+  } catch (error: any) {
+    console.error("Critical error in verify-receipt API:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Gagal memproses verifikasi bukti transfer.",
+      error: error.message || String(error),
+    });
+  }
+});
+
+// New Endpoint: AI Email Billing Draft Generator
+router.post("/billing-email", async (req, res) => {
+  try {
+    const { invoiceId, clientName, amount, dueDate, status } = req.body;
+    if (!invoiceId || !clientName || !amount || !dueDate) {
+      return res.status(400).json({ status: "error", message: "Missing required fields: invoiceId, clientName, amount, dueDate are required." });
+    }
+
+    const isOverdue = status === "OVERDUE";
+    
+    const generateLocalEmailFallback = () => {
+      return {
+        subject: `Pemberitahuan Tagihan Pembayaran - Invoice #${invoiceId}`,
+        body: `Kepada Yth. Pimpinan ${clientName},\n\nSemoga Bapak/Ibu dalam keadaan sehat walafiat.\n\nMelalui email ini, kami ingin menyampaikan pemberitahuan mengenai tagihan Anda untuk Invoice #${invoiceId} sebesar ${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(amount)} yang ${isOverdue ? "telah melewati tanggal jatuh tempo pada" : "akan jatuh tempo pada"} ${dueDate}.\n\nPembayaran dapat ditransfer ke rekening perusahaan kami di:\n- Bank: BCA\n- No. Rekening: 123-456-7890\n- Atas Nama: PT Mitra Abadi Jaya\n\nMohon mengirimkan bukti transfer setelah pembayaran dilakukan. Jika Anda telah menyelesaikan pembayaran, mohon abaikan email ini.\n\nTerima kasih atas perhatian dan kerja samanya.\n\nHormat kami,\nDepartemen Keuangan\nPT Mitra Abadi Jaya`
+      };
+    };
+
+    if (!isGeminiKeyConfigured()) {
+      return res.json({
+        email: generateLocalEmailFallback(),
+        _aiGenerated: false,
+        _warning: "Gemini API Key is not configured. Using local email template."
+      });
+    }
+
+    const systemPrompt = `Kamu adalah perwakilan Departemen Keuangan profesional di PT Mitra Abadi Jaya. Buatlah draf email penagihan pembayaran yang sangat sopan, formal, dan profesional dalam Bahasa Indonesia untuk klien kami.
+Sesuaikan nada bicara:
+- Jika tagihan sudah terlambat (OVERDUE): Buat email pengingat yang sopan namun tegas.
+- Jika tagihan belum jatuh tempo (UNPAID): Buat email pengingat awal yang bersahabat dan profesional.
+
+Format output wajib berupa JSON dengan fields:
+{
+  "subject": "Subjek email",
+  "body": "Isi email (gunakan \\n untuk baris baru)"
+}`;
+
+    const userPrompt = `Detail Tagihan:
+- Invoice ID: ${invoiceId}
+- Nama Klien: ${clientName}
+- Nominal: ${amount}
+- Tanggal Jatuh Tempo: ${dueDate}
+- Status: ${status}`;
+
+    try {
+      const apiKey = process.env.GEMINI_API_KEY;
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+      const apiResponse = await fetch(geminiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }]
+            }
+          ],
+          generationConfig: {
+            responseMimeType: "application/json"
+          }
+        })
+      });
+
+      if (!apiResponse.ok) {
+        throw new Error(`Gemini API status ${apiResponse.status}`);
+      }
+
+      const resData = (await apiResponse.json()) as any;
+      const rawText = resData.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!rawText) {
+        throw new Error("Empty response from Gemini");
+      }
+
+      const email = JSON.parse(rawText.trim());
+      res.json({
+        email,
+        _aiGenerated: true
+      });
+    } catch (apiError) {
+      console.error("Gemini email generation failed, using fallback:", apiError);
+      res.json({
+        email: generateLocalEmailFallback(),
+        _aiGenerated: false,
+        _warning: "Gemini API call failed. Using local email template."
+      });
+    }
+  } catch (error: any) {
+    console.error("Critical error in billing-email API:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Gagal menyusun draf email penagihan.",
       error: error.message || String(error),
     });
   }

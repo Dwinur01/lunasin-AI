@@ -113,6 +113,48 @@ router.post("/", async (req, res) => {
   }
 });
 
+// GET /api/invoices/:id - Get a single invoice details
+router.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const invoices = await dbService.getInvoices();
+    const invoice = invoices.find((inv) => inv.SK === `INVOICE#${id}`);
+
+    if (!invoice) {
+      return res.status(404).json({
+        status: "error",
+        message: `Invoice dengan ID '${id}' tidak ditemukan.`
+      });
+    }
+
+    const client = await dbService.getClient(invoice.clientId);
+    const today = new Date().toISOString().split("T")[0];
+    let status = invoice.status;
+    if (status === "UNPAID" && invoice.dueDate < today) {
+      status = "OVERDUE";
+    }
+
+    res.json({
+      invoiceId: id,
+      clientId: invoice.clientId,
+      clientName: client?.name || "Klien Tidak Diketahui",
+      clientContact: client?.contactInfo || "Kontak belum diatur",
+      amount: invoice.amount,
+      status,
+      issueDate: invoice.issueDate,
+      dueDate: invoice.dueDate,
+      notes: invoice.notes || "",
+    });
+  } catch (error: any) {
+    console.error("Failed to get invoice:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Gagal memuat detail invoice.",
+      error: error.message || String(error),
+    });
+  }
+});
+
 // PATCH /api/invoices/:id - Mark invoice as paid
 router.patch("/:id", async (req, res) => {
   try {

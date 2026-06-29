@@ -58,6 +58,12 @@ export default function Layout() {
               <Link to="/clients" className={getLinkClass("/clients")}>
                 Clients
               </Link>
+              <Link to="/expenses" className={getLinkClass("/expenses")}>
+                Expenses
+              </Link>
+              <Link to="/reports" className={getLinkClass("/reports")}>
+                Laporan
+              </Link>
             </nav>
           </div>
           
@@ -103,6 +109,22 @@ export default function Layout() {
             }`}
           >
             Clients
+          </Link>
+          <Link 
+            to="/expenses" 
+            className={`py-1 px-3 rounded-md transition-colors ${
+              isLinkActive("/expenses") ? "text-indigo-400 bg-slate-800/50" : "text-slate-400"
+            }`}
+          >
+            Expenses
+          </Link>
+          <Link 
+            to="/reports" 
+            className={`py-1 px-3 rounded-md transition-colors ${
+              isLinkActive("/reports") ? "text-indigo-400 bg-slate-800/50" : "text-slate-400"
+            }`}
+          >
+            Laporan
           </Link>
         </div>
       </header>

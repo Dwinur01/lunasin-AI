@@ -13,11 +13,11 @@ export default function Landing() {
       color: "from-indigo-500/20 to-purple-500/20 border-indigo-500/30"
     },
     {
-      title: "Proyeksi Kas Masuk Interaktif",
-      desc: "Lihat arus kas masuk 7 hari ke depan secara visual melalui grafik interaktif yang dihitung otomatis dari tanggal jatuh tempo invoice.",
-      icon: "📊",
-      badge: "Real-time",
-      color: "from-emerald-500/20 to-teal-500/20 border-emerald-500/30"
+      title: "Proyeksi & Simulasi Kas (What-If)",
+      desc: "Simulasikan penundaan bayar klien dan biaya tak terduga dengan slider interaktif. Grafik dual-bar diperbarui secara real-time.",
+      icon: "🎛️",
+      badge: "Sandbox",
+      color: "from-indigo-500/20 to-sky-500/20 border-indigo-500/30"
     },
     {
       title: "AI Quick Invoice ⚡",
@@ -27,10 +27,38 @@ export default function Landing() {
       color: "from-amber-500/20 to-orange-500/20 border-amber-500/30"
     },
     {
-      title: "Pengingat Pembayaran WhatsApp",
-      desc: "Hubungi klien dengan tagihan belum lunas via WhatsApp dalam satu klik menggunakan pesan pengingat sopan yang digenerate otomatis.",
+      title: "AI Verifikasi Bukti Transfer (Vision)",
+      desc: "Unggah foto bukti transfer. Gemini Vision OCR akan membaca nominal, nama pengirim, bank secara instan dan mencocokkannya dengan invoice.",
+      icon: "📸",
+      badge: "Gemini Vision",
+      color: "from-purple-500/20 to-pink-500/20 border-purple-500/30"
+    },
+    {
+      title: "AI Email Billing Draft Generator",
+      desc: "Minta Gemini menyusun draf email penagihan resmi dalam Bahasa Indonesia yang disesuaikan dengan status risiko klien (sopan atau tegas).",
+      icon: "📧",
+      badge: "Gemini 1.5 Flash",
+      color: "from-sky-500/20 to-blue-500/20 border-sky-500/30"
+    },
+    {
+      title: "Expense Tracker & Laba Bersih",
+      desc: "Catat pengeluaran operasional usaha Anda dan pantau laba bersih (Net Profit) riil secara otomatis di Dashboard.",
+      icon: "💸",
+      badge: "Accounting",
+      color: "from-emerald-500/20 to-teal-500/20 border-emerald-500/30"
+    },
+    {
+      title: "Cetak Laporan Word (Kop Surat)",
+      desc: "Ekspor laporan keuangan bulanan lengkap dengan Kop Surat resmi PT Mitra Abadi Jaya ke dalam format Microsoft Word (.doc) sekali klik.",
+      icon: "📄",
+      badge: "Official Document",
+      color: "from-rose-500/20 to-red-500/20 border-rose-500/30"
+    },
+    {
+      title: "Pengingat Pembayaran WhatsApp & PDF",
+      desc: "Hubungi klien via WhatsApp otomatis dengan pesan terformat, serta cetak invoice ramah printer dengan format cetak profesional.",
       icon: "💬",
-      badge: "1-Click Share",
+      badge: "1-Click PDF",
       color: "from-green-500/20 to-emerald-500/20 border-green-500/30"
     }
   ];

@@ -342,4 +342,51 @@ export const dbService = {
       writeLocalDb(localItems);
     }
   },
+
+  // 12. Get all expenses
+  async getExpenses(tenantId: string = "default-tenant") {
+    if (isAWSConfigured()) {
+      const command = new QueryCommand({
+        TableName: TABLE_NAME,
+        KeyConditionExpression: "PK = :pk AND begins_with(SK, :skPrefix)",
+        ExpressionAttributeValues: {
+          ":pk": `TENANT#${tenantId}`,
+          ":skPrefix": "EXPENSE#",
+        },
+      });
+      const result = await docClient.send(command);
+      return result.Items || [];
+    } else {
+      const items = readLocalDb();
+      return items.filter(
+        (item) => item.PK === `TENANT#${tenantId}` && item.SK.startsWith("EXPENSE#")
+      );
+    }
+  },
+
+  // 13. Add an expense
+  async addExpense(expense: { expenseId: string; amount: number; category: string; description: string; date: string }, tenantId: string = "default-tenant") {
+    const item = {
+      PK: `TENANT#${tenantId}`,
+      SK: `EXPENSE#${expense.expenseId}`,
+      amount: expense.amount,
+      category: expense.category,
+      description: expense.description,
+      date: expense.date,
+    };
+
+    if (isAWSConfigured()) {
+      await docClient.send(
+        new PutCommand({
+          TableName: TABLE_NAME,
+          Item: item,
+        })
+      );
+    } else {
+      const items = readLocalDb();
+      items.push(item);
+      writeLocalDb(items);
+    }
+    return item;
+  },
 };

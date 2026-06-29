@@ -208,25 +208,5 @@
     "paidDate": "2026-06-23",
     "wasLate": false,
     "daysLate": 0
-  },
-  {
-    "PK": "TENANT#default-tenant",
-    "SK": "INVOICE#inv_1782735781002",
-    "clientId": "c2",
-    "amount": 140000,
-    "status": "PAID",
-    "issueDate": "2026-06-29",
-    "dueDate": "2026-07-13",
-    "notes": "",
-    "GSI1PK": "TENANT#default-tenant",
-    "GSI1SK": "DUEDATE#2026-07-13#INVOICE#inv_1782735781002"
-  },
-  {
-    "PK": "CLIENT#c2",
-    "SK": "PAYMENT#p_inv_1782735781002",
-    "invoiceId": "inv_1782735781002",
-    "paidDate": "2026-06-29",
-    "wasLate": false,
-    "daysLate": 0
   }
 ]

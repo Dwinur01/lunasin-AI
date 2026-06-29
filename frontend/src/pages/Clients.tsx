@@ -368,6 +368,41 @@ export default function Clients() {
                 {/* Credit Score Meter */}
                 {renderCreditScoreMeter(selectedClient)}
 
+                {/* Metrik Analisis Pembayaran Klien */}
+                <div>
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5">
+                    Analisis Transaksi & Pembayaran
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-slate-950/40 border border-slate-900 rounded-xl p-3.5 space-y-1">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Total Transaksi</span>
+                      <p className="text-sm font-bold text-white font-mono">{formatRupiah(selectedClient.totalInvoiced)}</p>
+                    </div>
+                    <div className="bg-slate-950/40 border border-slate-900 rounded-xl p-3.5 space-y-1">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tepat Waktu</span>
+                      <p className="text-sm font-bold text-emerald-400 font-mono">{selectedClient.onTimeRate}%</p>
+                    </div>
+                    <div className="bg-slate-950/40 border border-slate-900 rounded-xl p-3.5 space-y-1">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Pelunasan Selesai</span>
+                      <p className="text-sm font-bold text-indigo-400 font-mono">{selectedClient.paymentHistory.length} Invoice</p>
+                    </div>
+                    <div className="bg-slate-950/40 border border-slate-900 rounded-xl p-3.5 space-y-1">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Rata-rata Terlambat</span>
+                      {(() => {
+                        const latePayments = selectedClient.paymentHistory.filter((p) => p.wasLate);
+                        const avgDaysLate = latePayments.length > 0
+                          ? Math.round(latePayments.reduce((sum, p) => sum + p.daysLate, 0) / latePayments.length)
+                          : 0;
+                        return (
+                          <p className={`text-sm font-bold font-mono ${avgDaysLate > 0 ? "text-rose-400" : "text-slate-300"}`}>
+                            {avgDaysLate > 0 ? `+${avgDaysLate} Hari` : "0 Hari"}
+                          </p>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                </div>
+
                 {/* AI Risk Card */}
                 <div>
                   <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
